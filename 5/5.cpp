@@ -74,7 +74,28 @@ bool followsOrder(const std::vector<int>& row, const std::vector<std::vector<int
             }
         }
     }
-    return true;
+
+return true;
+}
+/**
+ * Helper to correct the misordered rows
+ * 
+ * @param row The row to check.
+ * @param orderRules The map containing the order of the pairs.
+ */
+void correctOrder(std::vector<int>& row, const std::vector<std::vector<int>>& orderRules) {
+    while (!followsOrder(row, orderRules)){
+        // iterate through the rules
+        for (const std::vector<int>& rule : orderRules) {
+            // check if both ints in the pair are in the row
+            if (!(std::find(row.begin(), row.end(), rule[0]) == row.end() || std::find(row.begin(), row.end(), rule[1]) == row.end())) {
+                // check that rule[0] is to the left of rule[1]
+                if (std::find(row.begin(), row.end(), rule[0]) > std::find(row.begin(), row.end(), rule[1])) {
+                    std::iter_swap(std::find(row.begin(), row.end(), rule[0]), std::find(row.begin(), row.end(), rule[1]));
+                }
+            }
+        }
+    }
 }
 
 /**
@@ -85,14 +106,18 @@ bool followsOrder(const std::vector<int>& row, const std::vector<std::vector<int
  * @param orderRules The map containing the order of the pairs.
  * @param total The sum of the middle values of the rows that follow the rules.
  */
-void sumMiddleValues(const std::vector<std::vector<int>>& input, const std::vector<std::vector<int>>& orderRules, int& total) {
+void sumMiddleValues(std::vector<std::vector<int>>& input, 
+    const std::vector<std::vector<int>>& orderRules,
+    int& total,
+    int& correctedTotal) {
     // iterate through the input
-    for (const std::vector<int>& row : input) {
+    for (std::vector<int>& row : input) {
         // check if the row follows the order
         if (followsOrder(row, orderRules)) {
-            // add the middle value to the total
-            std::cout << row[row.size() / 2] << std::endl;
             total += row[row.size() / 2];
+        } else {
+            correctOrder(row, orderRules);
+            correctedTotal += row[row.size() / 2];
         }
     }
 }
@@ -116,6 +141,12 @@ int main(int argc, char* argv[]) {
     // Vector to store the input
     std::vector<std::vector<int>> input;
 
+    // Int to store the sum of the middle values
+    int total = 0;
+
+    //in to store the corrected total
+    int correctedTotal = 0;
+
     // Read the file into orderRules and input
     if (!readFileIntoMap(filename, orderRules, input)) {
         return 1;
@@ -137,12 +168,12 @@ int main(int argc, char* argv[]) {
             std::cout << std::endl;
         }
     }
-    // Int to store the sum of the middle values
-    int total = 0;
+
     // Sum the middle values of the rows that follow the rules
-    sumMiddleValues(input, orderRules, total);
+    sumMiddleValues(input, orderRules, total, correctedTotal);
     // Output the total
     std::cout << "Total: " << total << std::endl;
+    std::cout << "Corrected Total: " << correctedTotal << std::endl;
 
     return 0;
 }
