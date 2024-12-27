@@ -86,11 +86,12 @@ void move(std::vector<std::vector<int>>& pos, std::vector<std::vector<int>>& inp
     if (xpos + xdir < 0 || xpos + xdir >= cols || ypos + ydir < 0 || ypos + ydir >= rows) {
         complete = true;
     }
-    // Check if the next position is a 0
+    // Check if the next position is not blocked
     else if (input[ypos + ydir][xpos + xdir] != 1) {
         if (input[ypos][xpos] != 2) {
             // update the input matrix to a 2 to show that we've visited this position
             input[ypos][xpos] = 2;
+            // increment the count of positions traversed
             count++;
         }
         // update the position
@@ -117,10 +118,55 @@ void move(std::vector<std::vector<int>>& pos, std::vector<std::vector<int>>& inp
  * @param input The input matrix.
  * @param count The number of positions traversed.
  * @param complete Flag to indicate if we've exited the bounds of the matrix.
+ * @param threshold The number of positions to traverse before stopping- once this threshold is reached, we assume they are in a loop.
  */
-void traverse(std::vector<std::vector<int>>& pos, std::vector<std::vector<int>>& input, int& count, bool& complete) {
+void traverse(std::vector<std::vector<int>>& pos, std::vector<std::vector<int>>& input, int& count, bool& complete, int threshold = 100000) {
+    int iter = 0;
     while (!complete) {
         move(pos, input, count, complete);
+        if (iter > threshold) {
+            std::cout << "Threshold reached. Exiting." << std::endl;
+            break;
+        }
+        iter++;
+
+    }
+}
+
+/**
+ * Function to try placing an obstruction at each position in the matrix where the value is 0
+ * and then traversing the matrix to see if we can reach the end.
+ * 
+ * @param input The input matrix.
+ * @param pos The starting position and direction.
+ * @param count The number of positions traversed.
+ * @param complete Flag to indicate if we've exited the bounds of the matrix.
+ * @param threshold The number of positions to traverse before stopping- once this threshold is reached, we assume they are in a loop.
+ * @param obstacles The number of different obstacles that cause the traversal to fail.
+ */
+void tryObstructions(std::vector<std::vector<int>>& input, std::vector<std::vector<int>>& pos, int& count, bool& complete, int threshold, int& obstacles) {
+    int rows = input.size();
+    int cols = input[0].size();
+    for (int i = 0; i < rows; i++) {
+        for (int j = 0; j < cols; j++) {
+            if (input[i][j] == 0) {
+                // Create a copy of the input matrix
+                std::vector<std::vector<int>> input_copy = input;
+                // Place an obstruction at this position
+                input_copy[i][j] = 1;
+                // Create a copy of the position and direction
+                std::vector<std::vector<int>> pos_copy = pos;
+                // Reset the count and complete flag
+                count = 1;
+                complete = false;
+                // Traverse the matrix
+                traverse(pos_copy, input_copy, count, complete, threshold);
+                // If we've exited the bounds of the matrix, increment the obstacles count
+                if (!complete) {
+                    obstacles++;
+                }
+            }
+        }
     }
 }
 
@@ -172,10 +218,28 @@ int main(int argc, char* argv[]) {
             std::cout << std::endl;
         }
     }
+    // copy pos for the first traversal
+    std::vector<std::vector<int>> pos_copy = pos;
+    // copy input for the first traversal
+    std::vector<std::vector<int>> input_copy = input;
     // Traverse the matrix
-    traverse(pos, input, count, complete);
+    traverse(pos_copy, input_copy, count, complete);
     // Output the number of positions traversed
     std::cout << "Number of positions traversed: " << count << std::endl;
+
+    // Reset the count, pos and complete flag
+    count = 1;
+    complete = false;
+    pos_copy = pos;
+    input_copy = input;
+    // Int to store the number of obstacles
+    int obstacles = 0;
+    // set the threshold for traversal termination
+    int threshold = 10000;
+    // Try placing an obstruction at each position in the matrix and see if we can still reach the end
+    tryObstructions(input_copy, pos_copy, count, complete, threshold, obstacles);
+    // Output the number of obstacles
+    std::cout << "Number of obstacles: " << obstacles << std::endl;
 
     return 0;
 }
