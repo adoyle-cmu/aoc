@@ -99,7 +99,6 @@ std::vector<std::vector<char>> locateAntinodes(const std::vector<std::vector<cha
     std::vector<std::pair<std::pair<int, int>, std::pair<int, int>> > pairs;
     std::vector<std::pair<int, int>> uniqueAntinodes;
     findEqualPairs(input, pairs);
-    std::cout << "Pairs: " << pairs.size() << std::endl;
     for (const auto& pair : pairs) {
         findAntinodes(input, pair, uniqueAntinodes);
     }
