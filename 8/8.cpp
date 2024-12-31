@@ -84,6 +84,44 @@ void findAntinodes(const std::vector<std::vector<char>>& input, const std::pair<
 }
 
 /**
+ * @brief finds the antinodes using the part 2 definition of antinodes
+ * 
+ * an antinode occurs at any grid position exactly in line with at least two antennas of the same frequency, 
+ * regardless of distance. This means that some of the new antinodes will occur at the position of each antenna 
+ * (unless that antenna is the only one of its frequency).
+ * 
+ * @param input A reference to a vector of vectors of characters representing the matrix.
+ * @param pair A pair of pairs of integers representing the coordinates of the two non-zero entries.
+ * @param antinodes vector of pairs of integers where the antinodes will be stored.
+ */
+void findAntinodesPart2(const std::vector<std::vector<char>>& input, const std::pair<std::pair<int, int>, std::pair<int, int>>& pair, std::vector<std::pair<int, int>>& antinodes) {
+    int x1 = pair.first.first;
+    int y1 = pair.first.second;
+    int x2 = pair.second.first;
+    int y2 = pair.second.second;
+    int dx = x2 - x1;
+    int dy = y2 - y1;
+    int x = x1;
+    int y = y1;
+    while (x >= 0 && x < input.size() && y >= 0 && y < input[x].size()) {
+        if (find(antinodes.begin(), antinodes.end(), std::make_pair(x, y)) == antinodes.end()) {
+            antinodes.push_back(std::make_pair(x, y));
+        }
+        x += dx;
+        y += dy;
+    }
+    x = x1;
+    y = y1;
+    while (x >= 0 && x < input.size() && y >= 0 && y < input[x].size()) {
+        if (find(antinodes.begin(), antinodes.end(), std::make_pair(x, y)) == antinodes.end()) {
+            antinodes.push_back(std::make_pair(x, y));
+        }
+        x -= dx;
+        y -= dy;
+    }
+}
+
+/**
  * @brief locate the antinodes
  * 
  * Antinodes fall along a line that is drawn through two nonzero matrix entries of the same value. 
@@ -92,15 +130,20 @@ void findAntinodes(const std::vector<std::vector<char>>& input, const std::pair<
  * 
  * @param input A reference to a vector of vectors of characters representing the matrix.
  * @param total A reference to an integer where the total number of antinodes will be stored.
+ * @param part2 A boolean flag to determine if the part 2 definition of antinodes should be used.
  * 
  * @return a copy of the input matrix with the antinodes marked with a '9' value.
  */
-std::vector<std::vector<char>> locateAntinodes(const std::vector<std::vector<char>>& input, int& total) {
+std::vector<std::vector<char>> locateAntinodes(const std::vector<std::vector<char>>& input, int& total, bool part2 = false) {
     std::vector<std::pair<std::pair<int, int>, std::pair<int, int>> > pairs;
     std::vector<std::pair<int, int>> uniqueAntinodes;
     findEqualPairs(input, pairs);
     for (const auto& pair : pairs) {
-        findAntinodes(input, pair, uniqueAntinodes);
+        if (part2) {
+            findAntinodesPart2(input, pair, uniqueAntinodes);
+        } else {
+            findAntinodes(input, pair, uniqueAntinodes);
+        }
     }
     total = uniqueAntinodes.size();
     std::vector<std::vector<char>> output = input;
@@ -142,8 +185,24 @@ int main(int argc, char* argv[]) {
         std::cout << "Total: " << total << std::endl;
         // if test is in the filename, print the output
         if (filename.find("test") != std::string::npos) {
-            std::cout << "Output:" << std::endl;
+            std::cout << "Output (p1):" << std::endl;
             for (const auto& values : output) {
+                for (char c : values) {
+                    std::cout << c << " ";
+                }
+                std::cout << std::endl;
+            }
+        }
+        // reset the total
+        total = 0;
+        // Locate the antinodes in the matrix using the part 2 definition
+        std::vector<std::vector<char>> output2 = locateAntinodes(input, total, true);
+        // emit the total number of antinodes
+        std::cout << "Total (part 2): " << total << std::endl;
+        // if test is in the filename, print the output
+        if (filename.find("test") != std::string::npos) {
+            std::cout << "Output (p2):" << std::endl;
+            for (const auto& values : output2) {
                 for (char c : values) {
                     std::cout << c << " ";
                 }
