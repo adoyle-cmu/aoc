@@ -63,6 +63,8 @@ bool readFileIntoVector(const std::string& filename, std::vector<std::vector<lon
 bool canCombineToTargetHelper(std::vector<long>& values, long target, int index, long current, std::unordered_map<std::string, bool>& memo) {
     if (index == values.size()) {
         return current == target;
+    } else if (current > target) {
+        return false;
     }
     std::string key = std::to_string(index) + "," + std::to_string(current);
     if (memo.find(key) != memo.end()) {
@@ -104,6 +106,8 @@ bool canCombineToTarget(std::vector<long>& values, long target) {
 bool canCombineToTargetWithConcatHelper(std::vector<long>& values, long target, int index, long current, std::unordered_map<std::string, bool>& memo) {
     if (index == values.size()) {
         return current == target;
+    } else if (current > target) {
+        return false;
     }
     std::string key = std::to_string(index) + "," + std::to_string(current);
     if (memo.find(key) != memo.end()) {
