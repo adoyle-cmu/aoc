@@ -5,6 +5,8 @@
 #include <string>
 #include <algorithm>
 #include <unordered_map>
+#include <thread>
+#include <future>
 
 /**
  * @brief Reads a file and stores its contents into a vector of vectors of long integers.
@@ -63,7 +65,8 @@ bool readFileIntoVector(const std::string& filename, std::vector<std::vector<lon
 bool canCombineToTargetHelper(std::vector<long>& values, long target, int index, long current, std::unordered_map<std::string, bool>& memo) {
     if (index == values.size()) {
         return current == target;
-    } else if (current > target) {
+    }
+    if (current > target) {
         return false;
     }
     std::string key = std::to_string(index) + "," + std::to_string(current);
@@ -106,7 +109,8 @@ bool canCombineToTarget(std::vector<long>& values, long target) {
 bool canCombineToTargetWithConcatHelper(std::vector<long>& values, long target, int index, long current, std::unordered_map<std::string, bool>& memo) {
     if (index == values.size()) {
         return current == target;
-    } else if (current > target) {
+    } 
+    if (current > target) {
         return false;
     }
     std::string key = std::to_string(index) + "," + std::to_string(current);
@@ -146,17 +150,25 @@ bool canCombineToTargetWithConcat(std::vector<long>& values, long target) {
  * @param useConcat A boolean flag indicating whether concatenation should be used in the calculations.
  */
 void checkSolutions(const std::vector<std::vector<long>>& input, long& total, bool useConcat = false) {
+    std::vector<std::future<long>> futures;
     for (const auto& values : input) {
-        long solution = values[0];
-        if (useConcat) {
-            if (canCombineToTargetWithConcat(const_cast<std::vector<long>&>(values), solution)) {
-                total += solution;
+        futures.push_back(std::async(std::launch::async, [values, useConcat]() -> long {
+            long solution = values[0];
+            if (useConcat) {
+                if (canCombineToTargetWithConcat(const_cast<std::vector<long>&>(values), solution)) {
+                    return solution;
+                }
+            } else {
+                if (canCombineToTarget(const_cast<std::vector<long>&>(values), solution)) {
+                    return solution;
+                }
             }
-        } else {
-            if (canCombineToTarget(const_cast<std::vector<long>&>(values), solution)) {
-                total += solution;
-            }
-        }
+            return 0;
+        }));
+    }
+
+    for (auto& future : futures) {
+        total += future.get();
     }
 }
 
